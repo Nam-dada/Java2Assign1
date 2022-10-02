@@ -1,7 +1,6 @@
 import java.util.*;
 import java.io.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 public class MovieAnalyzer {
@@ -55,6 +54,10 @@ public class MovieAnalyzer {
 
         public String getRuntime() {
             return Runtime;
+        }
+
+        public int getRuntimeNum() {
+            return Integer.parseInt(Runtime.replace(" min", ""));
         }
 
         public String getGenre() {
@@ -186,39 +189,128 @@ public class MovieAnalyzer {
     }
 
     public static Map<String, Integer> getMovieCountByGenre() {
-        Map<String, Integer> temp = movies.stream().collect(Collectors.groupingBy(
-                Movie::getGenre,
-                Collectors.reducing(0, movie -> 1, Integer::sum)
-        ));
-
-        List<Map.Entry<String, Integer>> t1 = new ArrayList<>(temp.entrySet());
-        Collections.sort(t1, (Map.Entry<String, Integer> a, Map.Entry<String, Integer> b) -> {
-            if (!a.getValue().equals(b.getValue())) return b.getValue() - a.getValue();
-            else return a.getKey().compareTo(b.getKey());
+        Map<String, Integer> temp = new TreeMap<>();
+        movies.forEach(movie -> {
+            String[] t1 = movie.getGenre().split(", ");
+            for (String i : t1){
+                if (temp.containsKey(i)) temp.put(i, temp.get(i)+1);
+                else temp.put(i, 1);
+            }
         });
-
-        Map<String, Integer> ftp = new LinkedHashMap<>();
-        t1.stream().forEachOrdered(element -> ftp.put(element.getKey(), element.getValue()));
-
-        return ftp;
+        Map<String, Integer> ans = new LinkedHashMap<>();
+        temp.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .forEachOrdered(x -> ans.put(x.getKey(), x.getValue()));
+        return ans;
     }
 
     public static Map<List<String>, Integer> getCoStarCount() {
-        return movies.stream().collect(Collectors.groupingBy(
-                movie -> new ArrayList<>(Arrays.asList(movie.getStar1(), movie.getStar2())).stream().sorted().collect(Collectors.toList()),
+        Map<List<String>, Integer> temp =  movies.stream().collect(Collectors.groupingBy(
+                movie -> new ArrayList<>(Arrays.asList(movie.getStar1(), movie.getStar2())).stream()
+                        .sorted(Comparator.naturalOrder()).collect(Collectors.toList()),
                 Collectors.reducing(0, movie -> 1, Integer::sum)
         ));
+        List<List<String>> t1 = movies.stream().map(movie -> new ArrayList<>(Arrays.asList(movie.getStar1(), movie.getStar3())).stream()
+                .sorted(Comparator.naturalOrder()).collect(Collectors.toList())).collect(Collectors.toList());
+        List<List<String>> t2 = movies.stream().map(movie -> new ArrayList<>(Arrays.asList(movie.getStar1(), movie.getStar4())).stream()
+                .sorted(Comparator.naturalOrder()).collect(Collectors.toList())).collect(Collectors.toList());
+        List<List<String>> t3 = movies.stream().map(movie -> new ArrayList<>(Arrays.asList(movie.getStar2(), movie.getStar3())).stream()
+                .sorted(Comparator.naturalOrder()).collect(Collectors.toList())).collect(Collectors.toList());
+        List<List<String>> t4 = movies.stream().map(movie -> new ArrayList<>(Arrays.asList(movie.getStar2(), movie.getStar4())).stream()
+                .sorted(Comparator.naturalOrder()).collect(Collectors.toList())).collect(Collectors.toList());
+        List<List<String>> t5 = movies.stream().map(movie -> new ArrayList<>(Arrays.asList(movie.getStar3(), movie.getStar4())).stream()
+                .sorted(Comparator.naturalOrder()).collect(Collectors.toList())).collect(Collectors.toList());
+
+        final boolean[] isExisted = {false};
+        t1.forEach(z -> {
+            isExisted[0] = false;
+            temp.forEach((x,y) -> {
+                String x0 = x.get(0);
+                String x1 = x.get(1);
+                String z0 = z.get(0);
+                String z1 = z.get(1);
+                if ((z0.equals(x0) && z1.equals(x1))) {
+                    temp.put(x,y+1);
+                    isExisted[0] = true;
+                }
+            });
+            if (!isExisted[0]) temp.put(z,1);
+        });
+
+        t2.forEach(z -> {
+            isExisted[0] = false;
+            temp.forEach((x,y) -> {
+                String x0 = x.get(0);
+                String x1 = x.get(1);
+                String z0 = z.get(0);
+                String z1 = z.get(1);
+                if ((z0.equals(x0) && z1.equals(x1))) {
+                    temp.put(x,y+1);
+                    isExisted[0] = true;
+                }
+            });
+            if (!isExisted[0]) temp.put(z,1);
+        });
+
+        t3.forEach(z -> {
+            isExisted[0] = false;
+            temp.forEach((x,y) -> {
+                String x0 = x.get(0);
+                String x1 = x.get(1);
+                String z0 = z.get(0);
+                String z1 = z.get(1);
+                if ((z0.equals(x0) && z1.equals(x1))) {
+                    temp.put(x,y+1);
+                    isExisted[0] = true;
+                }
+            });
+            if (!isExisted[0]) temp.put(z,1);
+        });
+
+        t4.forEach(z -> {
+            isExisted[0] = false;
+            temp.forEach((x,y) -> {
+                String x0 = x.get(0);
+                String x1 = x.get(1);
+                String z0 = z.get(0);
+                String z1 = z.get(1);
+                if ((z0.equals(x0) && z1.equals(x1))) {
+                    temp.put(x,y+1);
+                    isExisted[0] = true;
+                }
+            });
+            if (!isExisted[0]) temp.put(z,1);
+        });
+
+        t5.forEach(z -> {
+            isExisted[0] = false;
+            temp.forEach((x,y) -> {
+                String x0 = x.get(0);
+                String x1 = x.get(1);
+                String z0 = z.get(0);
+                String z1 = z.get(1);
+                if ((z0.equals(x0) && z1.equals(x1))) {
+                    temp.put(x,y+1);
+                    isExisted[0] = true;
+                }
+            });
+            if (!isExisted[0]) temp.put(z,1);
+        });
+
+        Map<List<String>, Integer> ans = new LinkedHashMap<>();
+        temp.entrySet().stream().sorted((x,y) -> y.getValue() - x.getValue()).forEachOrdered(e -> ans.put(e.getKey(), e.getValue()));
+        return ans;
     }
 
     public static List<String> getTopMovies(int top_k, String by){
         if (by.equals("runtime")){
             return movies.stream()
-                    .sorted(Comparator.comparing(Movie::getRuntime).thenComparing(Movie::getSeries_Title).reversed())
+                    .sorted(Comparator.comparing(Movie::getRuntimeNum, Comparator.reverseOrder()).thenComparing(Movie::getSeries_Title))
                     .limit(top_k)
                     .map(Movie::getSeries_Title).collect(Collectors.toList());
         }else {  //by == "overview"
             return movies.stream()
-                    .sorted(Comparator.comparing(Movie::getOverviewLength).thenComparing(Movie::getSeries_Title).reversed())
+                    .sorted(Comparator.comparing(Movie::getOverviewLength, Comparator.reverseOrder()).thenComparing(Movie::getSeries_Title))
                     .limit(top_k)
                     .map(Movie::getSeries_Title).collect(Collectors.toList());
         }
@@ -233,19 +325,31 @@ public class MovieAnalyzer {
             s2.forEach(
                     (x,y) -> {
                         List<Movie> t1 = s1.get(x);
-                        if (t1!=null) {y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});}
+                        if (t1!=null) {
+                            y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});
+                            s1.put(x,t1);
+                        }
+                        else s1.put(x,y);
                     }
             );
             s3.forEach(
                     (x,y) -> {
                         List<Movie> t1 = s1.get(x);
-                        if (t1!=null) {y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});}
+                        if (t1!=null) {
+                            y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});
+                            s1.put(x,t1);
+                        }
+                        else s1.put(x,y);
                     }
             );
             s4.forEach(
                     (x,y) -> {
                         List<Movie> t1 = s1.get(x);
-                        if (t1!=null) {y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});}
+                        if (t1!=null) {
+                            y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});
+                            s1.put(x,t1);
+                        }
+                        else s1.put(x,y);
                     }
             );
             Map<String, Double> avgRate = new TreeMap<>();
@@ -276,19 +380,31 @@ public class MovieAnalyzer {
             s2.forEach(
                     (x,y) -> {
                         List<Movie> t1 = s1.get(x);
-                        if (t1!=null) {y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});}
+                        if (t1!=null) {
+                            y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});
+                            s1.put(x,t1);
+                        }
+                        else s1.put(x,y);
                     }
             );
             s3.forEach(
                     (x,y) -> {
                         List<Movie> t1 = s1.get(x);
-                        if (t1!=null) {y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});}
+                        if (t1!=null) {
+                            y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});
+                            s1.put(x,t1);
+                        }
+                        else s1.put(x,y);
                     }
             );
             s4.forEach(
                     (x,y) -> {
                         List<Movie> t1 = s1.get(x);
-                        if (t1!=null) {y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});}
+                        if (t1!=null) {
+                            y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});
+                            s1.put(x,t1);
+                        }
+                        else s1.put(x,y);
                     }
             );
             Map<String, Double> avgRate = new TreeMap<>();
@@ -321,7 +437,7 @@ public class MovieAnalyzer {
 
     public static void main(String[] args) {
         MovieAnalyzer movieAnalyzer = new MovieAnalyzer("resources/imdb_top_500.csv");
-        System.out.println(searchMovies("Drama", 8, 514));
+        System.out.println(getTopStars(15, "g"));
     }
 
 }
