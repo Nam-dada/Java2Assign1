@@ -1,3 +1,4 @@
+import java.math.BigDecimal;
 import java.util.*;
 import java.io.*;
 import java.util.stream.Collectors;
@@ -21,7 +22,7 @@ public class MovieAnalyzer {
         private final String Meta_score;
         private final String Noofvotes;
         private final String Gross;
-        private final double IMDB_Rating;
+        private final float IMDB_Rating;
 
         public Movie(String series_Title, String released_Year, String certificate, String runtime,
                      String genre, String IMDB_Rating, String overview, String meta_score, String director,
@@ -41,7 +42,7 @@ public class MovieAnalyzer {
             Meta_score = meta_score;
             Noofvotes = noofvotes;
             Gross = gross;
-            this.IMDB_Rating = Double.parseDouble(IMDB_Rating);
+            this.IMDB_Rating = Float.parseFloat(IMDB_Rating);
         }
 
         public String getSeries_Title() {
@@ -113,7 +114,7 @@ public class MovieAnalyzer {
             else return 0;
         }
 
-        public double getIMDB_Rating() {
+        public float getIMDB_Rating() {
             return IMDB_Rating;
         }
     }
@@ -352,12 +353,12 @@ public class MovieAnalyzer {
                         else s1.put(x,y);
                     }
             );
-            Map<String, Double> avgRate = new TreeMap<>();
+            Map<String, Float> avgRate = new TreeMap<>();
             s1.forEach((k,v)->{
-                avgRate.put(k, v.stream().mapToDouble(Movie::getIMDB_Rating).sum()/v.size());
+                avgRate.put(k, (float) (v.stream().mapToDouble(x -> new BigDecimal(String.valueOf(x.getIMDB_Rating())).doubleValue()).sum()/v.size()));
             });
 
-            Map<String, Double> ans = new LinkedHashMap<>();
+            Map<String, Float> ans = new LinkedHashMap<>();
             avgRate.entrySet().stream()
                     .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                     .limit(top_k)
@@ -428,16 +429,27 @@ public class MovieAnalyzer {
 
     public static List<String> searchMovies(String genre, float min_rating, int max_runtime){
         return movies.stream()
-                .filter(movie -> movie.getGenre().equals(genre))
+                .filter(movie -> {
+                    String[] temp = movie.getGenre().split(", ");
+                    boolean isExisted = false;
+                    for (String i : temp){
+                        if (i.equals(genre)) {
+                            isExisted = true;
+                            break;
+                        }
+                    }
+                    return isExisted;
+                })
                 .filter(movie -> movie.getIMDB_Rating() >= min_rating)
                 .filter(movie -> Integer.parseInt(movie.getRuntime().replace(" min","")) <= max_runtime)
                 .map(Movie::getSeries_Title)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())
+                .stream().sorted().collect(Collectors.toList());
     }
 
     public static void main(String[] args) {
         MovieAnalyzer movieAnalyzer = new MovieAnalyzer("resources/imdb_top_500.csv");
-        System.out.println(getTopStars(15, "g"));
+        System.out.println(searchMovies("Drama", 9.0f, 150));
     }
 
 }
