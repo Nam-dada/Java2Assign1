@@ -1,6 +1,7 @@
 import java.util.*;
 import java.io.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 public class MovieAnalyzer {
@@ -64,6 +65,10 @@ public class MovieAnalyzer {
             return Overview;
         }
 
+        public int getOverviewLength() {
+            return Overview.length();
+        }
+
         public String getDirector() {
             return Director;
         }
@@ -100,6 +105,11 @@ public class MovieAnalyzer {
             return Gross;
         }
 
+        public double getGross_double() {
+            if (!Gross.isEmpty()) return Double.parseDouble(Gross);
+            else return 0;
+        }
+
         public double getIMDB_Rating() {
             return IMDB_Rating;
         }
@@ -123,7 +133,7 @@ public class MovieAnalyzer {
                     .map(this::dealString)
                     .map(a -> new Movie(a[1], a[2], a[3], a[4], a[5],
                             a[6], a[7], a[8], a[9], a[10],
-                            a[11], a[12], a[13], a[14], a[15]))
+                            a[11], a[12], a[13], a[14], a[15].replace(",","")))
                     .collect(Collectors.toList());
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -200,9 +210,118 @@ public class MovieAnalyzer {
         ));
     }
 
+    public static List<String> getTopMovies(int top_k, String by){
+        if (by.equals("runtime")){
+            return movies.stream()
+                    .sorted(Comparator.comparing(Movie::getRuntime).thenComparing(Movie::getSeries_Title).reversed())
+                    .limit(top_k)
+                    .map(Movie::getSeries_Title).collect(Collectors.toList());
+        }else {  //by == "overview"
+            return movies.stream()
+                    .sorted(Comparator.comparing(Movie::getOverviewLength).thenComparing(Movie::getSeries_Title).reversed())
+                    .limit(top_k)
+                    .map(Movie::getSeries_Title).collect(Collectors.toList());
+        }
+    }
+
+    public static List<String> getTopStars(int top_k, String by){
+        if (by.equals("rating")){
+            Map<String, List<Movie>> s1 = movies.stream().collect(Collectors.groupingBy(Movie::getStar1));
+            Map<String, List<Movie>> s2 = movies.stream().collect(Collectors.groupingBy(Movie::getStar2));
+            Map<String, List<Movie>> s3 = movies.stream().collect(Collectors.groupingBy(Movie::getStar3));
+            Map<String, List<Movie>> s4 = movies.stream().collect(Collectors.groupingBy(Movie::getStar4));
+            s2.forEach(
+                    (x,y) -> {
+                        List<Movie> t1 = s1.get(x);
+                        if (t1!=null) {y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});}
+                    }
+            );
+            s3.forEach(
+                    (x,y) -> {
+                        List<Movie> t1 = s1.get(x);
+                        if (t1!=null) {y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});}
+                    }
+            );
+            s4.forEach(
+                    (x,y) -> {
+                        List<Movie> t1 = s1.get(x);
+                        if (t1!=null) {y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});}
+                    }
+            );
+            Map<String, Double> avgRate = new TreeMap<>();
+            s1.forEach((k,v)->{
+                avgRate.put(k, v.stream().mapToDouble(Movie::getIMDB_Rating).sum()/v.size());
+            });
+
+            Map<String, Double> ans = new LinkedHashMap<>();
+            avgRate.entrySet().stream()
+                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                    .limit(top_k)
+                    .forEachOrdered(
+                            x -> ans.put(x.getKey(), x.getValue())
+                    );
+            List<String> pp = new ArrayList<>();
+            ans.forEach((x,y) -> pp.add(x));
+
+            return pp;
+        }else {  //by == "gross"
+            Map<String, List<Movie>> s1 = movies.stream().filter(movie -> !movie.getGross().isEmpty())
+                    .collect(Collectors.groupingBy(Movie::getStar1));
+            Map<String, List<Movie>> s2 = movies.stream().filter(movie -> !movie.getGross().isEmpty())
+                    .collect(Collectors.groupingBy(Movie::getStar2));
+            Map<String, List<Movie>> s3 = movies.stream().filter(movie -> !movie.getGross().isEmpty())
+                    .collect(Collectors.groupingBy(Movie::getStar3));
+            Map<String, List<Movie>> s4 = movies.stream().filter(movie -> !movie.getGross().isEmpty())
+                    .collect(Collectors.groupingBy(Movie::getStar4));
+            s2.forEach(
+                    (x,y) -> {
+                        List<Movie> t1 = s1.get(x);
+                        if (t1!=null) {y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});}
+                    }
+            );
+            s3.forEach(
+                    (x,y) -> {
+                        List<Movie> t1 = s1.get(x);
+                        if (t1!=null) {y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});}
+                    }
+            );
+            s4.forEach(
+                    (x,y) -> {
+                        List<Movie> t1 = s1.get(x);
+                        if (t1!=null) {y.forEach(z -> {if (!t1.contains(z)) t1.add(z);});}
+                    }
+            );
+            Map<String, Double> avgRate = new TreeMap<>();
+            s1.forEach((k,v)->{
+                avgRate.put(k, v.stream().mapToDouble(Movie::getGross_double).sum()/v.size());
+            });
+
+            Map<String, Double> ans = new LinkedHashMap<>();
+            avgRate.entrySet().stream()
+                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                    .limit(top_k)
+                    .forEachOrdered(
+                            x -> ans.put(x.getKey(), x.getValue())
+                    );
+            List<String> pp = new ArrayList<>();
+            ans.forEach((x,y) -> pp.add(x));
+
+            return pp;
+        }
+    }
+
+    public static List<String> searchMovies(String genre, float min_rating, int max_runtime){
+        return movies.stream()
+                .filter(movie -> movie.getGenre().equals(genre))
+                .filter(movie -> movie.getIMDB_Rating() >= min_rating)
+                .filter(movie -> Integer.parseInt(movie.getRuntime().replace(" min","")) <= max_runtime)
+                .map(Movie::getSeries_Title)
+                .collect(Collectors.toList());
+    }
+
     public static void main(String[] args) {
         MovieAnalyzer movieAnalyzer = new MovieAnalyzer("resources/imdb_top_500.csv");
-        System.out.println(getCoStarCount());
+        System.out.println(searchMovies("Drama", 8, 514));
     }
 
 }
