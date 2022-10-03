@@ -153,6 +153,11 @@ public class MovieAnalyzer {
         for (int i = 0; i < temp.length; i++) {
             if (temp[i] == '\"') {
                 cnt++;
+                if (cnt == 1) {
+                    flag = !flag;
+                    l = i + 1;
+                    continue;
+                }
                 if ((i + 1) < temp.length && temp[i + 1] == '\"') continue;
                 if ((i - 1) > -1 && temp[i - 1] == '\"') {
                     cnt -= 2;
@@ -169,6 +174,7 @@ public class MovieAnalyzer {
                 continue;
             }
             if (temp[i] == ',' && !flag) {
+                cnt = 0;
                 repo[id] = info.substring(l, i);
                 ++id;
                 l = i + 1;
