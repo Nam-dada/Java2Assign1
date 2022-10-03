@@ -1,4 +1,4 @@
-import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.io.*;
 import java.util.stream.Collectors;
@@ -119,12 +119,12 @@ public class MovieAnalyzer {
         }
     }
 
-    static List<Movie> movies = new ArrayList<>();
+    List<Movie> movies = new ArrayList<>();
 
     public MovieAnalyzer(String dataset_path) {
 
         try (BufferedReader infile
-                     = new BufferedReader(new FileReader(dataset_path))) {
+                     = new BufferedReader(new FileReader(dataset_path, Charset.forName("UTF-8")))) {
             String line = infile.readLine();
 
 //            while ((line = infile.readLine()) != null) {
@@ -183,7 +183,7 @@ public class MovieAnalyzer {
         return repo;
     }
 
-    public static Map<Integer, Integer> getMovieCountByYear() {
+    public Map<Integer, Integer> getMovieCountByYear() {
 //        Map<Integer, Integer> temp = movies.stream().collect(Collectors.groupingBy(
 //                Movie::getReleased_Year,
 //                () -> new TreeMap<>(Comparator.reverseOrder()),
@@ -195,7 +195,7 @@ public class MovieAnalyzer {
                 Collectors.reducing(0, movie -> 1, Integer::sum))).descendingMap();
     }
 
-    public static Map<String, Integer> getMovieCountByGenre() {
+    public Map<String, Integer> getMovieCountByGenre() {
         Map<String, Integer> temp = new TreeMap<>();
         movies.forEach(movie -> {
             String[] t1 = movie.getGenre().split(", ");
@@ -211,7 +211,7 @@ public class MovieAnalyzer {
         return ans;
     }
 
-    public static Map<List<String>, Integer> getCoStarCount() {
+    public Map<List<String>, Integer> getCoStarCount() {
         Map<List<String>, Integer> temp =  movies.stream().collect(Collectors.groupingBy(
                 movie -> new ArrayList<>(Arrays.asList(movie.getStar1(), movie.getStar2())).stream()
                         .sorted(Comparator.naturalOrder()).collect(Collectors.toList()),
@@ -309,7 +309,7 @@ public class MovieAnalyzer {
         return ans;
     }
 
-    public static List<String> getTopMovies(int top_k, String by){
+    public List<String> getTopMovies(int top_k, String by){
         if (by.equals("runtime")){
             return movies.stream()
                     .sorted(Comparator.comparing(Movie::getRuntimeNum, Comparator.reverseOrder()).thenComparing(Movie::getSeries_Title))
@@ -323,7 +323,7 @@ public class MovieAnalyzer {
         }
     }
 
-    public static List<String> getTopStars(int top_k, String by){
+    public List<String> getTopStars(int top_k, String by){
         if (by.equals("rating")){
             Map<String, List<Movie>> s1 = movies.stream().collect(Collectors.groupingBy(Movie::getStar1));
             Map<String, List<Movie>> s2 = movies.stream().collect(Collectors.groupingBy(Movie::getStar2));
@@ -359,12 +359,12 @@ public class MovieAnalyzer {
                         else s1.put(x,y);
                     }
             );
-            Map<String, Float> avgRate = new TreeMap<>();
+            Map<String, Double> avgRate = new TreeMap<>();
             s1.forEach((k,v)->{
-                avgRate.put(k, (float) (v.stream().mapToDouble(x -> new BigDecimal(String.valueOf(x.getIMDB_Rating())).doubleValue()).sum()/v.size()));
+                avgRate.put(k, (v.stream().mapToDouble(Movie::getIMDB_Rating).sum()/v.size()));
             });
 
-            Map<String, Float> ans = new LinkedHashMap<>();
+            Map<String, Double> ans = new LinkedHashMap<>();
             avgRate.entrySet().stream()
                     .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                     .limit(top_k)
@@ -433,7 +433,7 @@ public class MovieAnalyzer {
         }
     }
 
-    public static List<String> searchMovies(String genre, float min_rating, int max_runtime){
+    public List<String> searchMovies(String genre, float min_rating, int max_runtime){
         return movies.stream()
                 .filter(movie -> {
                     String[] temp = movie.getGenre().split(", ");
@@ -451,11 +451,6 @@ public class MovieAnalyzer {
                 .map(Movie::getSeries_Title)
                 .collect(Collectors.toList())
                 .stream().sorted().collect(Collectors.toList());
-    }
-
-    public static void main(String[] args) {
-        MovieAnalyzer movieAnalyzer = new MovieAnalyzer("resources/imdb_top_500.csv");
-        System.out.println(searchMovies("Drama", 9.0f, 150));
     }
 
 }
