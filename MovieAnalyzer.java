@@ -179,11 +179,6 @@ public class MovieAnalyzer {
     }
 
     public Map<Integer, Integer> getMovieCountByYear() {
-//        Map<Integer, Integer> temp = movies.stream().collect(Collectors.groupingBy(
-//                Movie::getReleased_Year,
-//                () -> new TreeMap<>(Comparator.reverseOrder()),
-//                Collectors.reducing(0, movie->1, Integer::sum)
-//        ));
         return movies.stream().collect(Collectors.groupingBy(
                 Movie::getReleased_Year,
                 TreeMap::new,
@@ -442,7 +437,8 @@ public class MovieAnalyzer {
                     return isExisted;
                 })
                 .filter(movie -> movie.getIMDB_Rating() >= min_rating)
-                .filter(movie -> Integer.parseInt(movie.getRuntime().replace(" min","")) <= max_runtime)
+                .filter(movie -> Integer.parseInt(movie.getRuntime()
+                        .replace(" min", "")) <= max_runtime)
                 .map(Movie::getSeries_Title)
                 .collect(Collectors.toList())
                 .stream().sorted().collect(Collectors.toList());
