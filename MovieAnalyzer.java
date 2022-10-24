@@ -1,11 +1,10 @@
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.io.*;
 import java.util.stream.Collectors;
 
 
 public class MovieAnalyzer {
-
     public class Movie {
         private final String Series_Title;
         private final String Certificate;
@@ -25,8 +24,10 @@ public class MovieAnalyzer {
         private final float IMDB_Rating;
 
         public Movie(String series_Title, String released_Year, String certificate, String runtime,
-                     String genre, String IMDB_Rating, String overview, String meta_score, String director,
-                     String star1, String star2, String star3, String star4, String noofvotes, String gross
+                     String genre, String IMDB_Rating, String overview, String meta_score,
+                     String director,
+                     String star1, String star2, String star3, String star4,
+                     String noofvotes, String gross
         ) {
             Series_Title = series_Title;
             Certificate = certificate;
@@ -127,12 +128,6 @@ public class MovieAnalyzer {
                      = new BufferedReader(new FileReader(dataset_path, Charset.forName("UTF-8")))) {
             String line = infile.readLine();
 
-//            while ((line = infile.readLine()) != null) {
-//                String[] a = dealString(line);
-//                movies.add(new Movie(a[1], a[2], a[3], a[4], a[5],
-//                        a[6], a[7], a[8], a[9], a[10],
-//                        a[11], a[12], a[13], a[14], a[15]));
-//            }
             movies = infile.lines()
                     .map(this::dealString)
                     .map(a -> new Movie(a[1], a[2], a[3], a[4], a[5],
